@@ -16,13 +16,134 @@
           </div>
         </header>
 
-        <!-- Decoder Card — Primary Action -->
+
+        <!-- Warning -->
+        <section class="warning-box mb-5">
+          <div class="warning-icon">⚠</div>
+          <div class="warning-content">
+            <p>
+              <strong class="accent-warm">บาร์โค้ดที่มีเลขเฉพาะไม่ซ้ำกัน</strong>แต่ละใบ
+              สามารถคำนวณย้อนหา<strong class="accent-warm">เล่มที่</strong>ได้ง่ายๆ —
+              เมื่อรู้เล่มที่ → รู้ต้นขั้ว → ต้นขั้วมีลายเซ็นและลำดับที่ →
+              <strong class="accent-green text-decoration-underline">ทำให้รู้ว่าใครกาเบอร์อะไรได้</strong>
+            </p>
+            <p class="mt-1 muted">
+              ตาม รธน. การเลือกตั้งต้องเป็นไปโดย "ลับ" — หากสืบย้อนได้ ขัดรัฐธรรมนูญ
+            </p>
+          </div>
+        </section>
+
+        <!-- Laws -->
         <section class="section-card mb-5">
+          <v-expansion-panels variant="accordion" flat>
+            <v-expansion-panel bg-color="transparent" elevation="0">
+              <v-expansion-panel-title class="laws-title pa-0">
+                <div class="section-label mb-0">
+                  <v-icon icon="mdi-scale-balance" size="16" class="mr-1" />
+                  กฎหมายที่เกี่ยวข้อง — พ.ร.บ.ประกอบ รธน. เลือกตั้ง ส.ส.
+                </div>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <p class="text-body-2 mb-4" style="line-height: 1.8; color: #555;">
+                  บาร์โค้ดที่มีเลขเฉพาะแต่ละใบ สามารถคำนวณย้อนหาเล่มที่ → ต้นขั้ว → ตัวตนผู้ลงคะแนนได้
+                  ซึ่งอาจขัดต่อกฎหมายอย่างน้อย <strong class="accent-warm">4 มาตรา</strong> (รธน. 1 + พ.ร.บ.ประกอบ รธน. 3)
+                </p>
+
+                <div class="law-item" v-for="law in laws" :key="law.section">
+                  <div class="d-flex align-center ga-2 mb-1">
+                    <v-chip :color="law.color" size="x-small" variant="flat" class="font-weight-bold">{{ law.section }}</v-chip>
+                    <span class="text-body-2 font-weight-medium" style="color: #333;">{{ law.title }}</span>
+                  </div>
+                  <div v-if="law.quote" class="law-quote mb-2">{{ law.quote }}</div>
+                  <p class="text-body-2" style="color: #666; line-height: 1.7;" v-html="law.description"></p>
+                </div>
+
+                <div class="caution-box mt-3">
+                  <strong>⚠ ข้อสังเกต</strong> —
+                  กฎหมายเลือกตั้งออกแบบเพื่อปกป้อง<strong class="accent-warm">ความลับของผู้ลงคะแนน</strong>
+                  ทั้ง 4 มาตรานี้มุ่งเน้นเรื่องเดียวกัน — ไม่ให้มีทางสืบได้ว่าใครลงคะแนนให้ใคร
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </section>
+
+        <!-- History -->
+        <section v-if="history.length > 0" class="section-card mb-5" ref="historySection">
+          <div class="d-flex align-center justify-space-between mb-3">
+            <div class="section-label mb-0">
+              <v-icon icon="mdi-history" size="16" class="mr-1" />
+              ประวัติ ({{ history.length }})
+            </div>
+            <div class="d-flex ga-1">
+              <v-btn
+                size="x-small"
+                variant="tonal"
+                color="primary"
+                @click="exportToJpg"
+                :loading="exporting === 'jpg'"
+                class="export-btn"
+              >
+                <v-icon icon="mdi-image-outline" size="14" class="mr-1" />
+                JPG
+              </v-btn>
+              <v-btn
+                size="x-small"
+                variant="tonal"
+                color="success"
+                @click="exportToExcel"
+                :loading="exporting === 'excel'"
+                class="export-btn"
+              >
+                <v-icon icon="mdi-file-excel-outline" size="14" class="mr-1" />
+                Excel
+              </v-btn>
+            </div>
+          </div>
+          <v-table density="compact" class="history-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>เลขที่บัตร</th>
+                <th>เล่มที่</th>
+                <th class="text-center">M</th>
+                <th class="text-center">ลำดับ</th>
+                <th>สูตร</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, i) in paginatedHistory" :key="i">
+                <td class="text-caption muted">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                <td class="accent-warm font-weight-medium">{{ item.ballotDisplay }}</td>
+                <td class="accent-green font-weight-medium">{{ item.bookDisplay }}</td>
+                <td class="text-center">{{ item.M }}</td>
+                <td class="text-center">{{ item.position }}/20</td>
+                <td>
+                  <code class="text-caption muted">⌊{{ item.N }}/20⌋+1 = {{ item.M }}</code>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+          <div v-if="totalPages > 1" class="d-flex justify-center mt-3">
+            <v-pagination
+              v-model="currentPage"
+              :length="totalPages"
+              :total-visible="5"
+              size="small"
+              density="comfortable"
+              rounded
+              color="primary"
+            />
+          </div>
+        </section>
+
+        <!-- Decoder Card — Primary Action -->
+        <section class="section-card mb-5 ">
           <div class="section-label">
             <v-icon icon="mdi-magnify" size="16" class="mr-1" />
             ถอดรหัส
           </div>
-          <div class="d-flex align-center ga-3">
+          <div class="d-flex align-center ga-3 ">
             <v-text-field
               v-model="inputBallot"
               variant="outlined"
@@ -204,8 +325,44 @@
           </div>
         </section>
 
-        <!-- Example & Code -->
+        <!-- Math & Example Section -->
         <section class="section-card mb-5">
+          <div class="section-label">
+            <v-icon icon="mdi-function-variant" size="16" class="mr-1" />
+            อธิบายหลักคณิตศาสตร์
+          </div>
+
+          <!-- Formula Definition -->
+          <div class="code-block mb-4">
+            <pre class="example-calc"><span class="muted">// กำหนดให้</span>
+<span class="accent-warm font-weight-bold">M</span> = เล่มที่ (Book ID)
+<span class="accent-warm font-weight-bold">N</span> = เลขที่บัตร
+      (Ballot Number จากบาร์โค้ด)
+
+<span class="muted">// สูตร</span>
+<strong style="color: #FFF; font-size: 1.1em;">M = ⌊N / 20⌋ + 1</strong></pre>
+          </div>
+
+          <!-- Explanation -->
+          <div class="explain-item mb-2">
+            <strong class="accent-warm">ทำไม 20?</strong>
+            <span> — กกต. ระบุว่าบัตรเลือกตั้ง 1 เล่ม มี <strong>20 ฉบับ</strong></span>
+          </div>
+          <div class="explain-item mb-4">
+            <strong class="accent-warm">แปลว่าอะไร?</strong>
+            <span> — เลขที่บัตร (N) จะเรียงลำดับต่อเนื่องไปเรื่อยๆ ไม่มีซ้ำ แต่ละเล่มจะมี 20 ใบ</span>
+          </div>
+
+          <!-- Book range example -->
+          <div class="code-block mb-5">
+            <pre class="example-calc">เล่ม 1 = บัตร 1–20
+เล่ม 2 = บัตร 21–40
+เล่ม 3 = บัตร 41–60 ...</pre>
+          </div>
+
+          <v-divider class="mb-5" />
+
+          <!-- Example Calculation -->
           <div class="section-label">
             <v-icon icon="mdi-lightbulb-outline" size="16" class="mr-1" />
             ตัวอย่างการคำนวณ
@@ -244,83 +401,6 @@ M = ⌊1435761 / 20⌋ + 1
           </div>
         </section>
 
-        <!-- Warning -->
-        <section class="warning-box mb-5">
-          <div class="warning-icon">⚠</div>
-          <div class="warning-content">
-            <p>
-              <strong class="accent-warm">บาร์โค้ดที่มีเลขเฉพาะไม่ซ้ำกัน</strong>แต่ละใบ
-              สามารถคำนวณย้อนหา<strong class="accent-warm">เล่มที่</strong>ได้ง่ายๆ —
-              เมื่อรู้เล่มที่ → รู้ต้นขั้ว → ต้นขั้วมีลายเซ็นและลำดับที่ →
-              <strong class="accent-green text-decoration-underline">ทำให้รู้ว่าใครกาเบอร์อะไรได้</strong>
-            </p>
-            <p class="mt-1 muted">
-              ตาม รธน. การเลือกตั้งต้องเป็นไปโดย "ลับ" — หากสืบย้อนได้ ขัดรัฐธรรมนูญ
-            </p>
-          </div>
-        </section>
-
-        <!-- Laws -->
-        <section class="section-card mb-5">
-          <v-expansion-panels variant="accordion" flat>
-            <v-expansion-panel bg-color="transparent" elevation="0">
-              <v-expansion-panel-title class="laws-title pa-0">
-                <div class="section-label mb-0">
-                  <v-icon icon="mdi-scale-balance" size="16" class="mr-1" />
-                  กฎหมายที่เกี่ยวข้อง — พ.ร.บ.ประกอบ รธน. เลือกตั้ง ส.ส.
-                </div>
-              </v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <p class="text-body-2 mb-4" style="line-height: 1.8; color: #555;">
-                  บาร์โค้ดที่มีเลขเฉพาะแต่ละใบ สามารถคำนวณย้อนหาเล่มที่ → ต้นขั้ว → ตัวตนผู้ลงคะแนนได้
-                  ซึ่งอาจขัดต่อกฎหมายเลือกตั้งอย่างน้อย <strong class="accent-warm">3 มาตรา</strong>
-                </p>
-
-                <div class="law-item" v-for="law in laws" :key="law.section">
-                  <div class="d-flex align-center ga-2 mb-1">
-                    <v-chip :color="law.color" size="x-small" variant="flat" class="font-weight-bold">{{ law.section }}</v-chip>
-                    <span class="text-body-2 font-weight-medium" style="color: #333;">{{ law.title }}</span>
-                  </div>
-                  <p class="text-body-2" style="color: #666; line-height: 1.7;" v-html="law.description"></p>
-                </div>
-
-                <div class="caution-box mt-3">
-                  <strong>⚠ ข้อสังเกต</strong> —
-                  กฎหมายเลือกตั้งออกแบบเพื่อปกป้อง<strong class="accent-warm">ความลับของผู้ลงคะแนน</strong>
-                  ทั้ง 3 มาตรานี้มุ่งเน้นเรื่องเดียวกัน — ไม่ให้มีทางสืบได้ว่าใครลงคะแนนให้ใคร
-                </div>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
-        </section>
-
-        <!-- History -->
-        <section v-if="history.length > 0" class="section-card">
-          <div class="section-label mb-3">
-            <v-icon icon="mdi-history" size="16" class="mr-1" />
-            ประวัติ ({{ history.length }})
-          </div>
-          <v-table density="compact" class="history-table">
-            <thead>
-              <tr>
-                <th>เลขที่บัตร</th>
-                <th>เล่มที่</th>
-                <th class="text-center">ลำดับ</th>
-                <th>สูตร</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, i) in history" :key="i">
-                <td class="accent-warm font-weight-medium">{{ item.ballotDisplay }}</td>
-                <td class="accent-green font-weight-medium">{{ item.bookDisplay }}</td>
-                <td class="text-center">{{ item.position }}/20</td>
-                <td>
-                  <code class="text-caption muted">⌊{{ item.N }}/20⌋+1 = {{ item.M }}</code>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </section>
 
         <!-- Snackbar -->
         <v-snackbar v-model="snackbar" :timeout="1500" color="primary" location="bottom center">
@@ -333,13 +413,26 @@ M = ⌊1435761 / 20⌋ + 1
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import Quagga from '@ericblade/quagga2'
+import { ref, computed } from 'vue'
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
+import html2canvas from 'html2canvas'
+import * as XLSX from 'xlsx'
 
 const inputBallot = ref('')
 const result = ref(null)
 const history = ref([])
 const snackbar = ref(false)
+const exporting = ref(null)
+const historySection = ref(null)
+
+// Pagination
+const currentPage = ref(1)
+const pageSize = 10
+const totalPages = computed(() => Math.ceil(history.value.length / pageSize))
+const paginatedHistory = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return history.value.slice(start, start + pageSize)
+})
 
 // Scanner state
 const isDragging = ref(false)
@@ -349,27 +442,40 @@ const scanResults = ref([])
 const scanError = ref(null)
 const fileInput = ref(null)
 
-const samples = ['A37804930', 'A20516201', 'A37805049', 'A37805050', 'A37805055', 'A37804930', 'A20516201']
+const samples = [
+  'A37804930', 'A20516201', 'A37805049', 'A37805050', 'A37805055',
+  'A01435761'
+]
 
 // Law data
 const laws = [
   {
-    section: 'มาตรา 92',
-    color: 'warning',
-    title: 'การลงคะแนน "โดยตรงและลับ"',
-    description: 'กำหนดให้การลงคะแนนเลือกตั้งเป็นไปโดย <strong>"โดยตรงและลับ"</strong> — หากบาร์โค้ดสามารถสืบย้อนตัวตนผู้ลงคะแนนได้ ย่อมขัดต่อหลัก "ลับ" ที่กฎหมายบัญญัติไว้',
-  },
-  {
-    section: 'มาตรา 93',
-    color: 'info',
-    title: 'บังคับพับบัตร — ไม่ให้ผู้อื่นทราบว่าลงคะแนนอย่างไร',
-    description: 'บังคับให้ <strong>พับบัตร</strong> ก่อนหย่อนลงหีบ เพื่อไม่ให้ผู้อื่นทราบว่าลงคะแนนอย่างไร — แต่หากบาร์โค้ดด้านนอกบัตรอ่านได้โดยไม่ต้องเปิดบัตร การพับบัตรก็ไม่ช่วยปกป้องความลับ',
-  },
-  {
-    section: 'มาตรา 96',
+    section: 'รธน. มาตรา 85',
     color: 'error',
-    title: 'ห้ามทำเครื่องหมายที่สังเกตได้บนบัตร',
-    description: 'ห้ามทำ <strong>เครื่องหมายที่ทำให้สังเกตได้</strong> บนบัตรเลือกตั้ง — บาร์โค้ดที่มีเลขเฉพาะแต่ละใบ ถือเป็นเครื่องหมายที่แยกบัตรแต่ละใบออกจากกันได้ จึงอาจเข้าข่ายตามมาตรานี้',
+    title: 'การเลือกตั้ง ส.ส. ต้องเป็นไปโดย "โดยตรงและลับ"',
+    description: 'รัฐธรรมนูญ 2560 มาตรา 85 บัญญัติว่า การเลือกตั้ง ส.ส. แบบแบ่งเขต ให้ใช้วิธี <strong>ออกเสียงลงคะแนนโดยตรงและลับ</strong> — หากบาร์โค้ดเฉพาะใบสามารถสืบย้อนตัวตนผู้ลงคะแนนได้ ย่อม <strong>ขัดหลัก "ลับ"</strong> ที่รัฐธรรมนูญคุ้มครอง',
+    quote: '\"ให้ใช้วิธีออกเสียงลงคะแนนโดยตรงและลับ\"',
+  },
+  {
+    section: 'พ.ร.บ. มาตรา 93',
+    color: 'info',
+    title: 'บังคับพับบัตร — มิให้ผู้อื่นทราบว่าลงคะแนนอย่างไร',
+    description: 'เมื่อทำเครื่องหมายกากบาทแล้ว ให้ <strong>พับบัตรเลือกตั้งเพื่อมิให้ผู้อื่นทราบว่าลงคะแนนอย่างไร</strong> แล้วจึงนำใส่หีบบัตร — แต่หากบาร์โค้ดด้านนอกบัตร (เห็นได้โดยไม่ต้องเปิด) สามารถระบุใบบัตรได้ การพับก็ไม่ช่วยปกป้องความลับ',
+    quote: '\"ให้พับบัตรเลือกตั้งเพื่อมิให้ผู้อื่นทราบว่าลงคะแนนอย่างไร\"',
+  },
+  {
+    section: 'พ.ร.บ. มาตรา 96',
+    color: 'warning',
+    title: 'ห้ามทำเครื่องหมายเพื่อเป็นที่สังเกตบนบัตร',
+    description: '<strong>ห้ามมิให้ผู้ใดจงใจทำเครื่องหมายเพื่อเป็นที่สังเกต</strong> โดยวิธีใดไว้ที่บัตรเลือกตั้ง — บาร์โค้ดที่มีเลขเฉพาะไม่ซ้ำกันแต่ละใบ ถือเป็น "เครื่องหมาย" ที่แยกบัตรแต่ละใบออกจากกันได้ อาจเข้าข่ายฝ่าฝืนมาตรานี้',
+    quote: '\"ห้ามมิให้ผู้ใดจงใจทำเครื่องหมายเพื่อเป็นที่สังเกตโดยวิธีใดไว้ที่บัตรเลือกตั้ง\"',
+  },
+  {
+    section: 'พ.ร.บ. มาตรา 99',
+    color: 'secondary',
+    title: 'ห้ามแสดงบัตรให้ผู้อื่นทราบว่าลงคะแนนอย่างไร',
+    description: 'ห้ามมิให้ผู้มีสิทธิเลือกตั้ง <strong>นำบัตรเลือกตั้งที่ออกเสียงลงคะแนนแล้วแสดงต่อผู้อื่น</strong> — แต่บาร์โค้ดบนบัตรสามารถสแกนจากภาพถ่ายและคำนวณย้อนหาเล่มที่ได้ จึงอาจเป็นช่องทางให้ "รู้" โดยอ้อม',
+    quote: '\"ห้ามมิให้ผู้มีสิทธิเลือกตั้งนำบัตรเลือกตั้งที่ออกเสียงลงคะแนนแล้วแสดงต่อผู้อื่น\"',
   },
 ]
 
@@ -397,28 +503,44 @@ function handleFileSelect(e) {
   if (e.target) e.target.value = ''
 }
 
-function scanWithQuagga(src, patchSize = 'medium') {
-  return new Promise((resolve) => {
-    Quagga.decodeSingle({
-      src,
-      numOfWorkers: 0,
-      locate: true,
-      inputStream: { size: 1600 },
-      decoder: {
-        readers: ['code_128_reader', 'code_39_reader', 'ean_reader', 'ean_8_reader', 'i2of5_reader'],
-        multiple: true,
-      },
-      locator: { patchSize, halfSample: true },
-    }, (scanResult) => {
-      if (scanResult && scanResult.codeResult) {
-        resolve([scanResult.codeResult])
-      } else {
-        resolve([])
-      }
-    })
+// ZXing reader setup
+function createReader() {
+  const hints = new Map()
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.ITF,
+    BarcodeFormat.UPC_A,
+  ])
+  hints.set(DecodeHintType.TRY_HARDER, true)
+  return new BrowserMultiFormatReader(hints)
+}
+
+// Load image into an HTMLImageElement
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
   })
 }
 
+// Scan barcode from image URL using ZXing
+async function scanWithZXing(imageSrc) {
+  const reader = createReader()
+  try {
+    const img = await loadImage(imageSrc)
+    const result = reader.decodeFromImage(img)
+    return result ? [result] : []
+  } catch {
+    return []
+  }
+}
+
+// Create a cropped version of the image (top portion)
 function cropImageTop(imgSrc, ratio = 0.35) {
   return new Promise((resolve) => {
     const img = new Image()
@@ -435,6 +557,7 @@ function cropImageTop(imgSrc, ratio = 0.35) {
   })
 }
 
+// Process uploaded file
 async function processFile(file) {
   if (!file.type.startsWith('image/')) return
   const objectUrl = URL.createObjectURL(file)
@@ -445,35 +568,42 @@ async function processFile(file) {
 
   try {
     const allResults = []
-    const r1 = await scanWithQuagga(objectUrl, 'medium')
+
+    // Attempt 1: Full image
+    const r1 = await scanWithZXing(objectUrl)
     allResults.push(...r1)
 
-    if (allResults.length === 0) {
-      const r2 = await scanWithQuagga(objectUrl, 'large')
-      allResults.push(...r2)
-    }
+    // Attempt 2: Crop top 30%
     if (allResults.length === 0) {
       const croppedSrc = await cropImageTop(objectUrl, 0.3)
       if (croppedSrc) {
-        const r3 = await scanWithQuagga(croppedSrc, 'medium')
-        allResults.push(...r3)
+        const r2 = await scanWithZXing(croppedSrc)
+        allResults.push(...r2)
       }
     }
+
+    // Attempt 3: Crop top 50%
     if (allResults.length === 0) {
       const croppedSrc2 = await cropImageTop(objectUrl, 0.5)
       if (croppedSrc2) {
-        const r4 = await scanWithQuagga(croppedSrc2, 'large')
+        const r3 = await scanWithZXing(croppedSrc2)
+        allResults.push(...r3)
+      }
+    }
+
+    // Attempt 4: Crop bottom 40% (barcode might be at bottom)
+    if (allResults.length === 0) {
+      const croppedBottom = await cropImageBottom(objectUrl, 0.4)
+      if (croppedBottom) {
+        const r4 = await scanWithZXing(croppedBottom)
         allResults.push(...r4)
       }
     }
-    if (allResults.length === 0) {
-      const r5 = await scanWithQuagga(objectUrl, 'small')
-      allResults.push(...r5)
-    }
 
+    // De-duplicate
     const seen = new Set()
     const unique = allResults.filter(r => {
-      const code = r.code
+      const code = r.getText()
       if (!code || seen.has(code)) return false
       seen.add(code)
       return true
@@ -481,9 +611,9 @@ async function processFile(file) {
 
     if (unique.length > 0) {
       scanResults.value = unique.map(r => ({
-        raw: r.code,
-        decoded: mapBarcodePrefix(r.code),
-        format: r.format,
+        raw: r.getText(),
+        decoded: mapBarcodePrefix(r.getText()),
+        format: r.getBarcodeFormat(),
       }))
     } else {
       scanError.value = 'ไม่พบบาร์โค้ดในภาพ — ลองถ่ายภาพให้ชัดขึ้น หรือครอปเฉพาะส่วนบาร์โค้ด'
@@ -494,6 +624,24 @@ async function processFile(file) {
   } finally {
     scanning.value = false
   }
+}
+
+// Crop bottom portion of image
+function cropImageBottom(imgSrc, ratio = 0.4) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = Math.floor(img.height * ratio)
+      const ctx = canvas.getContext('2d')
+      const sy = img.height - canvas.height
+      ctx.drawImage(img, 0, sy, img.width, canvas.height, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.95))
+    }
+    img.onerror = () => resolve(null)
+    img.src = imgSrc
+  })
 }
 
 function useScanResult(code) {
@@ -535,6 +683,66 @@ function decode() {
 function useSample(sample) {
   inputBallot.value = sample
   decode()
+}
+
+// Export history to JPG
+async function exportToJpg() {
+  if (!historySection.value) return
+  exporting.value = 'jpg'
+  try {
+    const canvas = await html2canvas(historySection.value, {
+      backgroundColor: '#FFFFFF',
+      scale: 2,
+      useCORS: true,
+    })
+    const link = document.createElement('a')
+    link.download = `ballot-history-${new Date().toISOString().slice(0, 10)}.jpg`
+    canvas.toBlob((blob) => {
+      link.href = URL.createObjectURL(blob)
+      link.click()
+      URL.revokeObjectURL(link.href)
+    }, 'image/jpeg', 0.95)
+  } catch (err) {
+    console.error('Export JPG error:', err)
+  } finally {
+    exporting.value = null
+  }
+}
+
+// Export history to Excel
+function exportToExcel() {
+  exporting.value = 'excel'
+  try {
+    const data = history.value.map((item, i) => ({
+      'ลำดับ': i + 1,
+      'เลขที่บัตร': item.ballotDisplay,
+      'N (ตัวเลข)': item.N,
+      'เล่มที่ (M)': item.bookDisplay,
+      'M (ตัวเลข)': item.M,
+      'ลำดับในเล่ม': item.position,
+      'สูตร': `⌊${item.N}/20⌋+1 = ${item.M}`,
+    }))
+    const ws = XLSX.utils.json_to_sheet(data)
+
+    // Column widths
+    ws['!cols'] = [
+      { wch: 6 },  // ลำดับ
+      { wch: 16 }, // เลขที่บัตร
+      { wch: 12 }, // N
+      { wch: 16 }, // เล่มที่
+      { wch: 10 }, // M
+      { wch: 12 }, // ลำดับในเล่ม
+      { wch: 24 }, // สูตร
+    ]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'ประวัติถอดรหัส')
+    XLSX.writeFile(wb, `ballot-history-${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    console.error('Export Excel error:', err)
+  } finally {
+    exporting.value = null
+  }
 }
 
 async function copyToClipboard(text) {
@@ -637,6 +845,12 @@ code, pre, .formula-bar code, .example-calc, .code-block pre, .code-block code {
   font-weight: 600;
   color: #555;
   margin-bottom: 8px;
+}
+
+.explain-item {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.6;
 }
 
 /* ============ INPUT ============ */
@@ -883,6 +1097,15 @@ code, pre, .formula-bar code, .example-calc, .code-block pre, .code-block code {
   margin: 0;
 }
 
+.law-quote {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #888;
+  border-left: 2px solid #D5D3CD;
+  padding-left: 10px;
+  margin-left: 4px;
+}
+
 .caution-box {
   background: #FFFBF0;
   border: 1px solid #F0E3C0;
@@ -891,6 +1114,15 @@ code, pre, .formula-bar code, .example-calc, .code-block pre, .code-block code {
   font-size: 0.82rem;
   color: #666;
   line-height: 1.6;
+}
+
+/* ============ EXPORT ============ */
+.export-btn {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  border-radius: 8px !important;
+  font-size: 0.7rem !important;
 }
 
 /* ============ HISTORY ============ */
