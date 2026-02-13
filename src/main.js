@@ -14,19 +14,24 @@ const vuetify = createVuetify({
     themes: {
       light: {
         colors: {
-          background: '#F5F5F0',
+          background: '#FAFAF8',
           surface: '#FFFFFF',
-          'surface-variant': '#F0EDE8',
-          primary: '#0D7377',
-          secondary: '#E8A838',
-          warning: '#E8913A',
-          error: '#D32F2F',
-          info: '#1976D2',
-          success: '#2E7D32',
-          'on-background': '#2C2C2C',
-          'on-surface': '#333333',
+          'surface-variant': '#F4F3EF',
+          primary: '#1A6B5C',
+          secondary: '#C4841D',
+          warning: '#D97706',
+          error: '#C62828',
+          info: '#2563EB',
+          success: '#16A34A',
+          'on-background': '#1A1A1A',
+          'on-surface': '#2D2D2D',
         },
       },
+    },
+  },
+  defaults: {
+    VCard: {
+      elevation: 0,
     },
   },
 })
