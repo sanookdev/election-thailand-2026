@@ -349,7 +349,7 @@ const scanResults = ref([])
 const scanError = ref(null)
 const fileInput = ref(null)
 
-const samples = ['A01435761','A37805049', 'A37805050', 'A37805055', 'A37804930', 'A20516201', 'A37805049', 'A37805050', 'A37805055', 'A37804930', 'A20516201']
+const samples = ['A37804930', 'A20516201', 'A37805049', 'A37805050', 'A37805055', 'A37804930', 'A20516201']
 
 // Law data
 const laws = [
